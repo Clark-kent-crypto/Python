@@ -33,7 +33,7 @@ class newBalls:#class for creating ball object . problem without it is all the b
    
 
 
-firstBall=newBalls([100,100],20)
+firstBall=newBalls([100,100],10)
 secondBall=newBalls([100,300],15)
 thirdBall=newBalls([300,200],15)
 fourthBall=newBalls([300,300],15)
@@ -68,7 +68,7 @@ def isReverse():# check if the box is in reversable state if yes put the appropr
       
 
 def update():
-   ai_animation()
+   ai_animation(firstBall)
    ball_movement(firstBall)
    # ball_movement(secondBall)
    # ball_movement(thirdBall)
@@ -96,10 +96,11 @@ def update():
 def render():
    new_color=pygame.Color(134,156,235,255)
    pygame.Surface.fill(screen,new_color)
-   text_color=pygame.Color(0,0,255,255)
+   text_color=pygame.Color(255,0,0,255)
    all_fonts=pygame.font.get_fonts()
    new_Font=pygame.font.SysFont(all_fonts[0],55,True,False)
-   pygame.font.Font.render(new_Font,"Score"+str(new_game_state.player_score),True,text_color,None)
+   text_surface=pygame.font.Font.render(new_Font,"Score  :"+str(new_game_state.player_score),True,text_color,None)
+   screen.blit(text_surface,(New_screen.width/2-110,0))
   
    draw_a_rect(screen,new_rect)
    draw_a_rect(screen,player_rect)
@@ -132,9 +133,14 @@ def ball_movement(new_Ball:newBalls):
       new_Ball.coordinates[1]-=1
 
 
-def ai_animation():
+def ai_animation(new_Ball:newBalls):
    isReverse()
- 
+   
+   # if(new_rect.top<=New_screen.height-new_rect.height and new_game_state.skip%new_game_state.speed==0 and new_game_state.is_reversed==True):
+   #   new_rect.top=new_Ball.coordinates[1]-new_Ball.radius-new_Ball.radius
+   # if(new_rect.top>=0 and new_game_state.skip%new_game_state.speed==0 and new_game_state.is_reversed==False):
+   #    new_rect.top=new_Ball.coordinates[1]+new_Ball.radius
+   new_rect.top=new_Ball.coordinates[1]-new_Ball.radius-new_Ball.radius 
    if(new_game_state.is_reversed==False):
 
      if(new_rect.top<New_screen.height-new_rect.height and new_game_state.skip%new_game_state.speed==0):
@@ -211,6 +217,8 @@ def collision(new_Ball:newBalls):
       new_game_state.player_score+=1
    if(ai_collisonX and ai_collisonY):#ai collison checks and collison system
       new_Ball.isReversedX=False
+   if(new_Ball.coordinates[0]==New_screen.width-new_Ball.radius-1 and new_game_state.skip%new_game_state.speed==0 and new_Ball.isReversedX==False):
+      new_game_state.player_score-=1
    
    
 
