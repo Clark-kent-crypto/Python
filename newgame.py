@@ -11,10 +11,12 @@ class rectangles:
       self.width=width
 class game_state:
    skip=0
-   speed=8
+   speed=3
    is_reversed=False
    is_reversed_ball_x=False
    is_reversed_ball_y=False
+   boxY=False
+   player_score=0
 class circleCenter:# i dont really use it and has no value right now 
    def __init__(self,x,y):
       self.x=x
@@ -26,12 +28,17 @@ class newBalls:#class for creating ball object . problem without it is all the b
     self.isReversedX=self.choice[int(rand.randint(0,1))]
     self.isReversedY=self.choice[int(rand.randint(0,1))]
     self.radius=radius
+# to check if the player box is moving up or down 
 
-firstBall=newBalls([100,100],15)
+   
+
+
+firstBall=newBalls([100,100],20)
 secondBall=newBalls([100,300],15)
 thirdBall=newBalls([300,200],15)
+fourthBall=newBalls([300,300],15)
 New_screen=game_screen(500,800)#current game screen information not to be confused with the screen that takes the surface
-new_rect=pygame.Rect(0,0,20,100)#Rect to render the boxes 
+new_rect=pygame.Rect(0,0,20,100)#Rect to render the boxes currently in use for ai paddle
 player_rect=pygame.Rect(New_screen.width-20,0,20,100)
 new_Ball1=[50,450]#x and y axis data for the ball object
 new_Ball2=[200,100]
@@ -41,6 +48,7 @@ if( pygame.init()==False):
 
 screen=pygame.display.set_mode((New_screen.width,New_screen.height))
 pygame.display.set_caption("MY APP")
+fpsLock=pygame.time.Clock()
 
 def draw_a_rect(screen,rectangle):
    new_color=pygame.Color(1,2,3,255)
@@ -62,17 +70,20 @@ def isReverse():# check if the box is in reversable state if yes put the appropr
 def update():
    ai_animation()
    ball_movement(firstBall)
-   ball_movement(secondBall)
-   ball_movement(thirdBall)
-   # ball_movement(new_Ball2)
+   # ball_movement(secondBall)
+   # ball_movement(thirdBall)
+   # ball_movement(fourthBall)
+  
    # collision()
    speed_Check=new_game_state.skip%3==0
    key_state=pygame.key.get_pressed()
    for keys in key_state:
       if (key_state[pygame.K_s]==True and player_rect.top<New_screen.height-player_rect.height and speed_Check ):
          player_rect.top+=1
+         new_game_state.boxY=False
          break
       elif(key_state[pygame.K_w]==True and player_rect.top>0 and speed_Check):
+         new_game_state.boxY=True
          player_rect.top-=1
          break
    
@@ -85,13 +96,18 @@ def update():
 def render():
    new_color=pygame.Color(134,156,235,255)
    pygame.Surface.fill(screen,new_color)
+   text_color=pygame.Color(0,0,255,255)
+   all_fonts=pygame.font.get_fonts()
+   new_Font=pygame.font.SysFont(all_fonts[0],55,True,False)
+   pygame.font.Font.render(new_Font,"Score"+str(new_game_state.player_score),True,text_color,None)
   
    draw_a_rect(screen,new_rect)
    draw_a_rect(screen,player_rect)
    draw_a_circle(15,firstBall)
-   draw_a_circle(15,secondBall)
-   draw_a_circle(15,thirdBall)
-   # draw_a_circle(15,new_Ball2)
+   # draw_a_circle(15,secondBall)
+   # draw_a_circle(15,thirdBall)
+   # draw_a_circle(15,fourthBall)
+   
    
 
    update()
@@ -102,10 +118,10 @@ def draw_a_circle(radius:int,new_Ball:newBalls):
    pygame.draw.circle(screen,new_color,new_Ball.coordinates,new_Ball.radius,0)
 def ball_movement(new_Ball:newBalls):
    collision(new_Ball)
-   top_Check=new_Ball.coordinates[1]>=0+15
-   bottom_Check=new_Ball.coordinates[1] <= New_screen.height-15
-   left_Check=new_Ball.coordinates[0]>=0+15
-   right_Check=new_Ball.coordinates[0]<New_screen.width-15
+   top_Check=new_Ball.coordinates[1]>=0+new_Ball.radius
+   bottom_Check=new_Ball.coordinates[1] <= New_screen.height-new_Ball.radius
+   left_Check=new_Ball.coordinates[0]>=0+new_Ball.radius
+   right_Check=new_Ball.coordinates[0]<New_screen.width-new_Ball.radius
    if(top_Check and bottom_Check and left_Check and right_Check and new_Ball.isReversedX==False and new_game_state.skip%new_game_state.speed==0):
     new_Ball.coordinates[0]+=1
    if(top_Check and bottom_Check and left_Check and right_Check and new_Ball.isReversedX==True and new_game_state.skip%new_game_state.speed==0):
@@ -147,6 +163,7 @@ def gameloop():
       
       # if(event.type==KEYDOWN and event.key==K_s):
       #       player_rect.top+=10
+    fpsLock.tick(760)
     pygame.display.update()
     new_game_state.skip+=1
 def input_section():
@@ -159,10 +176,15 @@ def input_section():
             pygame.quit()
             sys.exit()
 def collision(new_Ball:newBalls):
-   top_collision=new_Ball.coordinates[1]==0+15
-   bottom_collison=new_Ball.coordinates[1]==New_screen.height-15
-   left_collison=new_Ball.coordinates[0]==0+15
-   right_collison=new_Ball.coordinates[0]==New_screen.width-15
+   top_collision=new_Ball.coordinates[1]==0+new_Ball.radius
+   bottom_collison=new_Ball.coordinates[1]==New_screen.height-new_Ball.radius
+   left_collison=new_Ball.coordinates[0]==0+new_Ball.radius
+   right_collison=new_Ball.coordinates[0]==New_screen.width-new_Ball.radius
+   player_collisonX=new_Ball.coordinates[0]==New_screen.width-(player_rect.width+new_Ball.radius)
+   player_collisonY=new_Ball.coordinates[1]>player_rect.top and new_Ball.coordinates[1]<player_rect.top+player_rect.height
+   ai_collisonX=new_Ball.coordinates[0]==new_rect.width+new_Ball.radius#ai collison check for x axis
+   ai_collisonY=new_Ball.coordinates[1]>=new_rect.top-new_Ball.radius and new_Ball.coordinates[1]<=new_rect.top+new_rect.height+new_Ball.radius#ai collison check for y axis
+   
    if(top_collision==True):
       #
       new_Ball.isReversedY=False
@@ -177,6 +199,20 @@ def collision(new_Ball:newBalls):
    if(right_collison==True):
       new_Ball.isReversedX=True
       new_Ball.coordinates[0]-=1
+   if(player_collisonX==True and player_collisonY==True):#checks for playerbox to ball collison for each ball
+      new_Ball.isReversedX=True
+      new_Ball.coordinates[0]-=1
+      if(new_game_state.boxY==True):
+       new_Ball.isReversedY=True
+       new_Ball.coordinates[1]-=1
+      if(new_game_state.boxY==False):
+         new_Ball.isReversedY=False
+         new_Ball.coordinates[1]+=1
+      new_game_state.player_score+=1
+   if(ai_collisonX and ai_collisonY):#ai collison checks and collison system
+      new_Ball.isReversedX=False
+   
+   
 
 
 # def reverseBall_X():
